@@ -37,6 +37,15 @@ contract MarketTokens is Ownable {
     }
 
     /**
+     * @dev Allows the owner to set the PredictionMarket contract address.
+     * This is useful for deployment scenarios with circular dependencies.
+     */
+    function setPredictionMarket(address _newPredictionMarket) external onlyOwner {
+        require(_newPredictionMarket != address(0), "Invalid address");
+        predictionMarket = _newPredictionMarket;
+    }
+
+    /**
      * @dev Internal helper function to create a single HTS token.
      * This prevents the "Stack too deep" error by isolating the complex logic.
      */
