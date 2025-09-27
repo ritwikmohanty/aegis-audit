@@ -1,6 +1,15 @@
 {
   "name": "HardHat 2.0",
   "version": "1.0.0",
+  "scripts": {
+    "test": "npx hardhat test",
+    "test:mock": "npx hardhat test test/MockMarket.test.js",
+    "compile": "npx hardhat compile",
+    "deploy:hedera": "npx hardhat run scripts/deploy-hedera.js --network hedera_testnet",
+    "verify:hedera": "npx hardhat run scripts/verify-contracts.js --network hedera_testnet",
+    "create:hcs-topic": "node scripts/create-hcs-topic.js",
+    "gas-report": "REPORT_GAS=true npx hardhat test"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",
     "@nomicfoundation/hardhat-ethers": "^3.1.0",
@@ -19,6 +28,7 @@
     "typechain": "^8.3.2"
   },
   "dependencies": {
+    "@hashgraph/sdk": "^2.73.2",
     "@openzeppelin/contracts": "^5.4.0",
     "dotenv": "^17.2.2"
   }

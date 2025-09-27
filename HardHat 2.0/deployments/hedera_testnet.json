@@ -1,0 +1,9 @@
+{
+  "network": "hedera_testnet",
+  "deployer": "0xb978067A60ee9d45E5c811A1458D470dE66B96B6",
+  "timestamp": "2025-09-27T21:12:37.174Z",
+  "contracts": {
+    "MarketTokens": "0x1CB9FFfc5a4d6D033298C1D259C23253F09020B6",
+    "MarketFactory": "0x5f290d1Bd45D4D2e83381F8ff6AD9F6cAb4fb6c0"
+  }
+}
