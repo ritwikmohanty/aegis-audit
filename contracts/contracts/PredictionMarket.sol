@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-// IMPROVEMENT: Import ERC1155 and the new MarketTokens contract
-import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "./MarketTokens.sol"; // Assuming MarketTokens.sol is in the same directory
+import "./MarketTokens.sol";
+import "./IHederaTokenService.sol";
 
 /**
  * @title PredictionMarket
@@ -32,51 +32,72 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
         
         address oracle;
         bool oracleReported;
-        // Other fields like category, fees etc. can be added back as needed
+
+        // Market metadata
+        bytes32 category;
+        uint256 minLiquidity;
+        uint256 feeRate; // Fee rate in basis points (e.g., 100 = 1%)
     }
 
-    // --- State Variables ---
-    MarketTokens public marketTokens; // IMPROVEMENT: Single ERC1155 contract instance
-
+    // State variables
     mapping(uint256 => Market) public markets;
+    mapping(address => mapping(uint256 => uint256)) public userShares; // user => marketId => shares
     mapping(address => bool) public authorizedOracles;
     
     uint256 public marketCounter;
-    uint256 public platformFeeRate = 100; // 1% platform fee in basis points (100 = 1%)
+    uint256 public constant INITIAL_LIQUIDITY = 1000 * 10**18; // 1000 tokens
+    uint256 public constant FEE_DENOMINATOR = 10000; // For basis points calculation
+    uint256 public constant MIN_MARKET_DURATION = 1 hours;
+    uint256 public constant MAX_MARKET_DURATION = 365 days;
+    
     address public feeRecipient;
+    uint256 public platformFeeRate = 100; // 1% platform fee
 
-    // --- Events ---
+    // HTS Integration
+    MarketTokens public marketTokenFactory;
+    address constant HTS_PRECOMPILE_ADDRESS = 0x167;
+    IHederaTokenService constant hts = IHederaTokenService(HTS_PRECOMPILE_ADDRESS);
+
+    // Events
     event MarketCreated(uint256 indexed marketId, address indexed creator, string question, uint256 endTime);
     event TokensPurchased(uint256 indexed marketId, address indexed buyer, bool isYesToken, uint256 amountSpent, uint256 tokensReceived);
     event MarketResolved(uint256 indexed marketId, MarketOutcome outcome, address indexed oracle);
     event WinningsClaimed(uint256 indexed marketId, address indexed claimer, uint256 amount);
 
     // --- Constructor ---
-    constructor(address _feeRecipient) Ownable(msg.sender) {
-        // IMPROVEMENT: Deploy a single MarketTokens contract and store its address.
-        marketTokens = new MarketTokens(address(this));
+    constructor(address _feeRecipient, address _marketTokenFactory) Ownable(msg.sender) {
         feeRecipient = _feeRecipient;
+        marketCounter = 0;
+        marketTokenFactory = MarketTokens(_marketTokenFactory);
     }
 
-    // --- Core Functions ---
-
+    /**
+     * @dev Create a new prediction market
+     * @param _question The question for the prediction market
+     * @param _contractToAnalyze The contract to analyze for the prediction
+     * @param _endTime The end time for the market (timestamp)
+     * @param _oracle The oracle address for market resolution
+     * @param _category The category of the market
+     * @param _minLiquidity Minimum liquidity required
+     */
     function createMarket(
         string memory _question,
         string memory _contractToAnalyze,
         uint256 _endTime,
-        address _oracle
-    ) external payable returns (uint256) {
-        require(_endTime > block.timestamp, "End time must be in the future");
+        address _oracle,
+        bytes32 _category,
+        uint256 _minLiquidity
+    ) external payable nonReentrant returns (uint256) {
+        require(_endTime > block.timestamp + MIN_MARKET_DURATION, "Market duration too short");
+        require(_endTime <= block.timestamp + MAX_MARKET_DURATION, "Market duration too long");
         require(authorizedOracles[_oracle], "Unauthorized oracle");
-        require(msg.value > 0, "Initial collateral required");
+        require(msg.value >= _minLiquidity, "Insufficient initial liquidity");
 
         uint256 marketId = marketCounter++;
         
-        // IMPROVEMENT: The creator provides initial collateral.
-        // The contract mints an equal number of YES and NO tokens to itself to seed the AMM.
-        uint256 initialCollateral = msg.value;
-        uint256 initialSupply = initialCollateral; // 1 wei of collateral = 1 token share
-
+        // Deploy YES and NO tokens via Hedera Token Service integration
+        (address yesToken, address noToken) = deployMarketTokens(marketId, _question);
+        
         markets[marketId] = Market({
             id: marketId,
             question: _question,
@@ -85,65 +106,126 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
             endTime: _endTime,
             status: MarketStatus.Active,
             outcome: MarketOutcome.Pending,
-            yesTokenSupply: initialSupply,
-            noTokenSupply: initialSupply,
-            collateralPool: initialCollateral,
+            yesTokenSupply: INITIAL_LIQUIDITY,
+            noTokenSupply: INITIAL_LIQUIDITY,
+            collateralPool: msg.value,
+            totalVolume: 0,
+            creationFee: (msg.value * platformFeeRate) / FEE_DENOMINATOR,
+            resolutionBond: 0,
             oracle: _oracle,
-            oracleReported: false
+            oracleReported: false,
+            reportTime: 0,
+            category: _category,
+            minLiquidity: _minLiquidity,
+            feeRate: 300 // 3% default fee rate
         });
 
-        // Mint initial sets of tokens to this contract to provide liquidity
-        uint256 yesTokenId = _getYesTokenId(marketId);
-        uint256 noTokenId = _getNoTokenId(marketId);
-        marketTokens.mint(address(this), yesTokenId, initialSupply, "");
-        marketTokens.mint(address(this), noTokenId, initialSupply, "");
+        // Associate this contract with the new tokens to allow minting/burning
+        hts.associateToken(address(this), yesToken);
+        hts.associateToken(address(this), noToken);
 
-        emit MarketCreated(marketId, msg.sender, _question, _endTime);
+        emit MarketCreated(
+            marketId,
+            msg.sender,
+            _question,
+            _endTime
+        );
+
         return marketId;
     }
 
-    function buyTokens(uint256 _marketId, bool _isYesToken) external payable nonReentrant {
+    /**
+     * @dev Deploy YES and NO tokens for a market (Hedera Token Service integration)
+     * This is a placeholder for actual HTS integration
+     */
+    function deployMarketTokens(
+        uint256 _marketId,
+        string memory _question
+    ) internal returns (address yesToken, address noToken) {
+        string memory yesName = string(abi.encodePacked("YES-", _question));
+        string memory noName = string(abi.encodePacked("NO-", _question));
+        string memory yesSymbol = string(abi.encodePacked("YES", uintToString(_marketId)));
+        string memory noSymbol = string(abi.encodePacked("NO", uintToString(_marketId)));
+        
+        (yesToken, noToken) = marketTokenFactory.createMarketTokens(yesName, yesSymbol, noName, noSymbol);
+    }
+
+    /**
+     * @dev Buy prediction tokens using Automated Market Maker formula
+     * @param _marketId The market ID
+     * @param _isYesToken True if buying YES tokens, false for NO tokens
+     * @param _amount Amount of tokens to buy
+     */
+    function buyTokens(
+        uint256 _marketId,
+        bool _isYesToken,
+        uint256 _amount
+    ) external payable nonReentrant {
         Market storage market = markets[_marketId];
         require(market.status == MarketStatus.Active, "Market not active");
         require(block.timestamp < market.endTime, "Market has ended");
         require(msg.value > 0, "Must send ETH to buy");
+        require(_amount > 0, "Invalid amount");
 
-        // FIX: Correct AMM cost calculation (constant product: x * y = k)
-        uint256 k = market.yesTokenSupply * market.noTokenSupply;
-        
-        uint256 inputPool;
-        uint256 outputPool;
+        // Calculate cost using AMM formula (constant product)
+        uint256 cost = calculateTokenCost(_marketId, _isYesToken, _amount);
+        require(msg.value >= cost, "Insufficient payment");
 
+        // Associate buyer with the token if they haven't already
+        address tokenToBuy = _isYesToken ? market.yesToken : market.noToken;
+        hts.associateToken(msg.sender, tokenToBuy);
+
+        // Update token pools
         if (_isYesToken) {
-            inputPool = market.noTokenSupply;
-            outputPool = market.yesTokenSupply;
+            market.yesTokenPool = market.yesTokenPool + _amount;
         } else {
-            inputPool = market.yesTokenSupply;
-            outputPool = market.noTokenSupply;
+            market.noTokenPool = market.noTokenPool + _amount;
         }
-
-        // Formula: tokensOut = (outputPool * amountIn) / (inputPool + amountIn)
-        uint256 amountIn = msg.value;
-        uint256 tokensOut = (outputPool * amountIn) / (inputPool + amountIn);
-        require(tokensOut > 0, "Zero tokens received");
-
-        // Update market state
-        market.collateralPool += amountIn;
-        if (_isYesToken) {
-            market.yesTokenSupply -= tokensOut;
-            market.noTokenSupply += tokensOut;
-        } else {
-            market.noTokenSupply -= tokensOut;
-            market.yesTokenSupply += tokensOut;
-        }
-
-        // Transfer tokens to the buyer
-        uint256 tokenId = _isYesToken ? _getYesTokenId(_marketId) : _getNoTokenId(_marketId);
-        marketTokens.mint(msg.sender, tokenId, tokensOut, "");
         
-        emit TokensPurchased(_marketId, msg.sender, _isYesToken, amountIn, tokensOut);
+        market.liquidityPool = market.liquidityPool + msg.value;
+        market.totalVolume = market.totalVolume + msg.value;
+
+        // Mint tokens to buyer via HTS
+        (int response, , ) = hts.mintToken(tokenToBuy, _amount, new bytes[](0));
+        require(response == 22, "HTS mint failed");
+
+        // Calculate new price after trade
+        uint256 newPrice = getTokenPrice(_marketId, _isYesToken);
+
+        emit TokensPurchased(_marketId, msg.sender, _isYesToken, _amount, cost, newPrice);
+
+        // Refund excess payment
+        if (msg.value > cost) {
+            payable(msg.sender).transfer(msg.value - cost);
+        }
     }
 
+    /**
+     * @dev Calculate the cost to buy tokens using AMM formula
+     * @param _marketId The market ID
+     * @param _isYesToken True if YES token, false if NO token
+     * @param _amount The amount of tokens to buy
+     * @return cost The cost in collateral (ETH)
+     */
+    function calculateTokenCost(
+        uint256 _marketId,
+        bool _isYesToken,
+        uint256 _amount
+    ) public view returns (uint256 cost) {
+        Market memory market = markets[_marketId];
+
+        uint256 tokenSupply = _isYesToken ? market.yesTokenSupply : market.noTokenSupply;
+        uint256 otherTokenSupply = _isYesToken ? market.noTokenSupply : market.yesTokenSupply;
+
+        // Constant product formula: x * y = k
+        uint256 k = tokenSupply * otherTokenSupply;
+
+        // Calculate new token price after hypothetical trade
+        uint256 newTokenPrice = k / (tokenSupply + _amount);
+
+        // The cost is the difference between the current price and the new price, times the amount
+        cost = ((newTokenPrice - (k / tokenSupply)) * _amount) / 1e18;
+    }
 
     function reportOutcome(uint256 _marketId, MarketOutcome _outcome) external {
         Market storage market = markets[_marketId];
@@ -160,59 +242,142 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
         emit MarketResolved(_marketId, _outcome, msg.sender);
     }
 
+    /**
+     * @dev Claim winnings from a resolved market
+     * @param _marketId Market identifier
+     */
     function claimWinnings(uint256 _marketId) external nonReentrant {
         Market storage market = markets[_marketId];
         require(market.status == MarketStatus.Resolved, "Market not resolved");
 
-        uint256 winningTokenId;
+        address winningToken;
         if (market.outcome == MarketOutcome.Yes) {
-            winningTokenId = _getYesTokenId(_marketId);
+            winningToken = market.yesToken;
         } else if (market.outcome == MarketOutcome.No) {
-            winningTokenId = _getNoTokenId(_marketId);
+            winningToken = market.noToken;
         } else {
-            revert("Market outcome invalid, cannot claim");
+            revert("Invalid outcome for claiming");
         }
 
-        uint256 userTokens = marketTokens.balanceOf(msg.sender, winningTokenId);
-        require(userTokens > 0, "No winning tokens to claim");
+        // This is a simplification. On Hedera, getting token balance for another account is not direct.
+        // The user would typically call this function from a wallet that knows their balance.
+        // For this example, we assume the user provides their token amount.
+        // A more robust implementation would require a separate contract call from the user
+        // to transfer their tokens to this contract before claiming.
+        revert("claimWinnings needs to be adapted for HTS. User must transfer tokens to contract first.");
 
-        // FIX: Correctly calculate total supply from the market struct
-        uint256 totalWinningTokens = market.yesTokenSupply + market.noTokenSupply;
-        uint256 userPayout = (market.collateralPool * userTokens) / totalWinningTokens;
+        // Placeholder for what the logic would look like if balance was available:
+        /*
+        uint256 userTokens = token.balanceOf(msg.sender); // This won't work with HTS precompile directly
+        require(userTokens > 0, "No winning tokens");
 
-        // FIX: Update state BEFORE transfer (Checks-Effects-Interactions)
-        market.collateralPool -= userPayout;
-        
-        // Burn user's tokens to prevent double-claiming
-        marketTokens.burn(msg.sender, winningTokenId, userTokens);
+        // Calculate user's share of the payout
+        uint256 totalWinningTokens = token.totalSupply(); // This also won't work directly
+        uint256 userPayout = (market.liquidityPool * userTokens) / totalWinningTokens;
+
+        // Burn user's tokens via HTS
+        (int response, ) = hts.burnToken(winningToken, userTokens, new int64[](0));
+        require(response == 22, "HTS burn failed");
 
         // Transfer payout
         payable(msg.sender).transfer(userPayout);
 
-        emit WinningsClaimed(_marketId, msg.sender, userPayout);
+        emit RewardsDistributed(_marketId, msg.sender, userPayout);
+        */
     }
 
+    /**
+     * @dev Handle invalid outcome by returning proportional shares
+     * @param _marketId Market identifier
+     */
+    function handleInvalidOutcome(uint256 _marketId) external nonReentrant {
+        Market storage market = markets[_marketId];
+        require(market.status == MarketStatus.Resolved, "Market not resolved");
+        require(market.outcome == MarketOutcome.Invalid, "Not an invalid outcome market");
 
-    // --- Admin Functions ---
+        // Logic to return proportional shares to users
+        // This would require a separate claiming mechanism for invalid outcomes
+        // Users would burn their tokens to receive: (userTokens / totalTokens) * totalPayout
+    }
+
+    /**
+     * @dev Add authorization for an oracle
+     * @param _oracle Oracle address to authorize
+     */
     function authorizeOracle(address _oracle) external onlyOwner {
         authorizedOracles[_oracle] = true;
     }
 
+    /**
+     * @dev Revoke authorization for an oracle
+     * @param _oracle Oracle address to revoke
+     */
     function revokeOracle(address _oracle) external onlyOwner {
         authorizedOracles[_oracle] = false;
     }
 
-    // --- View Functions ---
-    function getMarket(uint256 _marketId) external view returns (Market memory) {
-        return markets[_marketId];
+    /**
+     * @dev Cancel a market and refund users
+     * @param _marketId Market identifier
+     */
+    function cancelMarket(uint256 _marketId) external nonReentrant {
+        Market storage market = markets[_marketId];
+        require(msg.sender == market.creator, "Only creator can cancel");
+        require(market.status == MarketStatus.Active, "Market not active");
+
+        market.status = MarketStatus.Cancelled;
+        
+        // In a cancelled market, users should be able to claim refunds
+        // Implementation would return their initial investments
     }
 
-    // --- Internal Helper Functions ---
-    function _getYesTokenId(uint256 _marketId) internal pure returns (uint256) {
-        return _marketId * 2;
+    /**
+     * @dev Helper to convert uint to string
+     */
+    function uintToString(uint256 value) internal pure returns (string memory) {
+        if (value == 0) {
+            return "0";
+        }
+        uint256 temp = value;
+        uint256 digits;
+        while (temp != 0) {
+            digits++;
+            temp /= 10;
+        }
+        bytes memory buffer = new bytes(digits);
+        while (value != 0) {
+            digits -= 1;
+            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
+            value /= 10;
+        }
+        return string(buffer);
+    }
+}
+
+/**
+ * @title MarketToken
+ * @dev ERC20 Token for prediction market
+ */
+contract MarketToken is ERC20 {
+    address public predictionMarket;
+    uint256 public marketId;
+
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        uint256 _marketId
+    ) ERC20(_name, _symbol) {
+        predictionMarket = msg.sender;
+        marketId = _marketId;
     }
 
-    function _getNoTokenId(uint256 _marketId) internal pure returns (uint256) {
-        return (_marketId * 2) + 1;
+    function mint(address to, uint256 amount) external {
+        require(msg.sender == predictionMarket, "Only prediction market can mint");
+        _mint(to, amount);
+    }
+
+    function burnFrom(address from, uint256 amount) external {
+        require(msg.sender == predictionMarket, "Only prediction market can burn");
+        _burn(from, amount);
     }
 }
