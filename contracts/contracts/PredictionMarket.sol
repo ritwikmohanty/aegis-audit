@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "./MarketTokens.sol";
@@ -25,13 +24,22 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
         MarketStatus status;
         MarketOutcome outcome;
         
-        // IMPROVEMENT: AMM pools tracking token supply within the contract
-        uint256 yesTokenSupply;
-        uint256 noTokenSupply;
-        uint256 collateralPool; // Base currency (ETH) pool
+        // HTS Token Addresses
+        address yesToken;
+        address noToken;
+
+        // AMM pools
+        uint256 yesTokenPool;
+        uint256 noTokenPool;
+        uint256 collateralPool; // Base currency (HBAR) pool
+        
+        uint256 totalVolume;
+        uint256 creationFee;
+        uint256 resolutionBond;
         
         address oracle;
         bool oracleReported;
+        uint256 reportTime;
 
         // Market metadata
         bytes32 category;
@@ -59,8 +67,8 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
     IHederaTokenService constant hts = IHederaTokenService(HTS_PRECOMPILE_ADDRESS);
 
     // Events
-    event MarketCreated(uint256 indexed marketId, address indexed creator, string question, uint256 endTime);
-    event TokensPurchased(uint256 indexed marketId, address indexed buyer, bool isYesToken, uint256 amountSpent, uint256 tokensReceived);
+    event MarketCreated(uint256 indexed marketId, address indexed creator, string question, uint256 endTime, address yesToken, address noToken);
+    event TokensPurchased(uint256 indexed marketId, address indexed buyer, bool isYesToken, uint256 amount, uint256 cost, uint256 newPrice);
     event MarketResolved(uint256 indexed marketId, MarketOutcome outcome, address indexed oracle);
     event WinningsClaimed(uint256 indexed marketId, address indexed claimer, uint256 amount);
 
@@ -106,8 +114,10 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
             endTime: _endTime,
             status: MarketStatus.Active,
             outcome: MarketOutcome.Pending,
-            yesTokenSupply: INITIAL_LIQUIDITY,
-            noTokenSupply: INITIAL_LIQUIDITY,
+            yesToken: yesToken,
+            noToken: noToken,
+            yesTokenPool: INITIAL_LIQUIDITY,
+            noTokenPool: INITIAL_LIQUIDITY,
             collateralPool: msg.value,
             totalVolume: 0,
             creationFee: (msg.value * platformFeeRate) / FEE_DENOMINATOR,
@@ -128,7 +138,9 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
             marketId,
             msg.sender,
             _question,
-            _endTime
+            _endTime,
+            yesToken,
+            noToken
         );
 
         return marketId;
@@ -164,7 +176,6 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
         Market storage market = markets[_marketId];
         require(market.status == MarketStatus.Active, "Market not active");
         require(block.timestamp < market.endTime, "Market has ended");
-        require(msg.value > 0, "Must send ETH to buy");
         require(_amount > 0, "Invalid amount");
 
         // Calculate cost using AMM formula (constant product)
@@ -182,7 +193,7 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
             market.noTokenPool = market.noTokenPool + _amount;
         }
         
-        market.liquidityPool = market.liquidityPool + msg.value;
+        market.collateralPool = market.collateralPool + msg.value;
         market.totalVolume = market.totalVolume + msg.value;
 
         // Mint tokens to buyer via HTS
@@ -211,20 +222,39 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
         uint256 _marketId,
         bool _isYesToken,
         uint256 _amount
-    ) public view returns (uint256 cost) {
-        Market memory market = markets[_marketId];
+    ) public view returns (uint256) {
+        Market storage market = markets[_marketId];
+        
+        uint256 currentPool = _isYesToken ? market.yesTokenPool : market.noTokenPool;
+        uint256 otherPool = _isYesToken ? market.noTokenPool : market.yesTokenPool;
+        
+        // Constant product formula: k = x * y
+        uint256 k = currentPool * otherPool;
+        
+        // New pool after adding tokens
+        uint256 newCurrentPool = currentPool + _amount;
+        
+        // Calculate required collateral change based on preserving k
+        uint256 newOtherPool = k / newCurrentPool;
+        uint256 collateralRequired = otherPool - newOtherPool;
+        
+        // Add fee
+        uint256 fee = (collateralRequired * market.feeRate) / FEE_DENOMINATOR;
+        
+        return collateralRequired + fee;
+    }
 
-        uint256 tokenSupply = _isYesToken ? market.yesTokenSupply : market.noTokenSupply;
-        uint256 otherTokenSupply = _isYesToken ? market.noTokenSupply : market.yesTokenSupply;
-
-        // Constant product formula: x * y = k
-        uint256 k = tokenSupply * otherTokenSupply;
-
-        // Calculate new token price after hypothetical trade
-        uint256 newTokenPrice = k / (tokenSupply + _amount);
-
-        // The cost is the difference between the current price and the new price, times the amount
-        cost = ((newTokenPrice - (k / tokenSupply)) * _amount) / 1e18;
+    /**
+     * @dev Get current token price
+     */
+    function getTokenPrice(uint256 _marketId, bool _isYesToken) public view returns (uint256) {
+        Market storage market = markets[_marketId];
+        
+        if (_isYesToken) {
+            return (market.collateralPool * 10**18) / market.yesTokenPool;
+        } else {
+            return (market.collateralPool * 10**18) / market.noTokenPool;
+        }
     }
 
     function reportOutcome(uint256 _marketId, MarketOutcome _outcome) external {
@@ -236,6 +266,7 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
         require(_outcome == MarketOutcome.Yes || _outcome == MarketOutcome.No || _outcome == MarketOutcome.Invalid, "Invalid outcome");
 
         market.oracleReported = true;
+        market.reportTime = block.timestamp;
         market.outcome = _outcome;
         market.status = MarketStatus.Resolved;
 
@@ -243,47 +274,42 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Claim winnings from a resolved market
+     * @dev Claim winnings from a resolved market. User must have transferred winning tokens to this contract first.
      * @param _marketId Market identifier
+     * @param _amountToBurn The amount of winning tokens the user has transferred to this contract to burn.
      */
-    function claimWinnings(uint256 _marketId) external nonReentrant {
+    function claimWinnings(uint256 _marketId, uint256 _amountToBurn) external nonReentrant {
         Market storage market = markets[_marketId];
         require(market.status == MarketStatus.Resolved, "Market not resolved");
+        require(_amountToBurn > 0, "Must burn more than 0 tokens");
 
         address winningToken;
+        uint256 totalWinningTokens;
         if (market.outcome == MarketOutcome.Yes) {
             winningToken = market.yesToken;
+            totalWinningTokens = market.yesTokenPool;
         } else if (market.outcome == MarketOutcome.No) {
             winningToken = market.noToken;
+            totalWinningTokens = market.noTokenPool;
         } else {
-            revert("Invalid outcome for claiming");
+            revert("Market outcome is invalid, use handleInvalidOutcome");
         }
 
-        // This is a simplification. On Hedera, getting token balance for another account is not direct.
-        // The user would typically call this function from a wallet that knows their balance.
-        // For this example, we assume the user provides their token amount.
-        // A more robust implementation would require a separate contract call from the user
-        // to transfer their tokens to this contract before claiming.
-        revert("claimWinnings needs to be adapted for HTS. User must transfer tokens to contract first.");
-
-        // Placeholder for what the logic would look like if balance was available:
-        /*
-        uint256 userTokens = token.balanceOf(msg.sender); // This won't work with HTS precompile directly
-        require(userTokens > 0, "No winning tokens");
-
         // Calculate user's share of the payout
-        uint256 totalWinningTokens = token.totalSupply(); // This also won't work directly
-        uint256 userPayout = (market.liquidityPool * userTokens) / totalWinningTokens;
+        uint256 totalPayout = market.collateralPool;
+        uint256 userPayout = (totalPayout * _amountToBurn) / totalWinningTokens;
 
-        // Burn user's tokens via HTS
-        (int response, ) = hts.burnToken(winningToken, userTokens, new int64[](0));
-        require(response == 22, "HTS burn failed");
+        // Burn user's tokens via HTS. The tokens must have been transferred to this contract.
+        (int response, ) = hts.burnToken(winningToken, _amountToBurn, new int64[](0));
+        require(response == 22, "HTS burn failed. Ensure tokens were transferred to this contract.");
+
+        // Reduce the collateral pool by the amount paid out
+        market.collateralPool -= userPayout;
 
         // Transfer payout
         payable(msg.sender).transfer(userPayout);
 
-        emit RewardsDistributed(_marketId, msg.sender, userPayout);
-        */
+        emit WinningsClaimed(_marketId, msg.sender, userPayout);
     }
 
     /**
@@ -351,33 +377,5 @@ contract PredictionMarket is Ownable, ReentrancyGuard {
             value /= 10;
         }
         return string(buffer);
-    }
-}
-
-/**
- * @title MarketToken
- * @dev ERC20 Token for prediction market
- */
-contract MarketToken is ERC20 {
-    address public predictionMarket;
-    uint256 public marketId;
-
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        uint256 _marketId
-    ) ERC20(_name, _symbol) {
-        predictionMarket = msg.sender;
-        marketId = _marketId;
-    }
-
-    function mint(address to, uint256 amount) external {
-        require(msg.sender == predictionMarket, "Only prediction market can mint");
-        _mint(to, amount);
-    }
-
-    function burnFrom(address from, uint256 amount) external {
-        require(msg.sender == predictionMarket, "Only prediction market can burn");
-        _burn(from, amount);
     }
 }
