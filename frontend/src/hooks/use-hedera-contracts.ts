@@ -76,13 +76,9 @@ export function useHederaContracts() {
     }
 
     const contractService = getContractService();
-    const signer = new ethers.Wallet(
-      dAppConnector.signers[0].getAccountId().toString(),
-      contractService['provider']
-    );
-
+    
     return executeTransaction(() => 
-      contractService.createMarket(params, signer)
+      contractService.createMarket(params, dAppConnector.signers[0])
     );
   }, [dAppConnector, executeTransaction]);
 
@@ -102,13 +98,9 @@ export function useHederaContracts() {
     }
 
     const contractService = getContractService();
-    const signer = new ethers.Wallet(
-      dAppConnector.signers[0].getAccountId().toString(),
-      contractService['provider']
-    );
 
     return executeTransaction(() => 
-      contractService.placeBet(params, signer)
+      contractService.placeBet(params, dAppConnector.signers[0])
     );
   }, [dAppConnector, executeTransaction]);
 
@@ -129,13 +121,9 @@ export function useHederaContracts() {
     }
 
     const contractService = getContractService();
-    const signer = new ethers.Wallet(
-      dAppConnector.signers[0].getAccountId().toString(),
-      contractService['provider']
-    );
 
     return executeTransaction(() => 
-      contractService.reportOutcome(marketAddress, outcome, signer)
+      contractService.reportOutcome(marketAddress, outcome, dAppConnector.signers[0])
     );
   }, [dAppConnector, executeTransaction]);
 
@@ -145,13 +133,9 @@ export function useHederaContracts() {
     }
 
     const contractService = getContractService();
-    const signer = new ethers.Wallet(
-      dAppConnector.signers[0].getAccountId().toString(),
-      contractService['provider']
-    );
 
     return executeTransaction(() => 
-      contractService.claimWinnings(marketAddress, signer)
+      contractService.claimWinnings(marketAddress, dAppConnector.signers[0])
     );
   }, [dAppConnector, executeTransaction]);
 
@@ -164,13 +148,9 @@ export function useHederaContracts() {
     }
 
     const contractService = getContractService();
-    const signer = new ethers.Wallet(
-      dAppConnector.signers[0].getAccountId().toString(),
-      contractService['provider']
-    );
 
     return executeTransaction(() => 
-      contractService.submitAuditLog(auditTrailAddress, params, signer)
+      contractService.submitAuditLog(auditTrailAddress, params, dAppConnector.signers[0])
     );
   }, [dAppConnector, executeTransaction]);
 
