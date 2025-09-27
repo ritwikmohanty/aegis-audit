@@ -7,12 +7,13 @@ const {
   PrivateKey,
   AccountId
 } = require('@hashgraph/sdk');
+const { AuditLog } = require('../models');
+const { v4: uuidv4 } = require('uuid');
 
 class AuditService {
   constructor() {
     this.client = null;
-    this.topicId = process.env.TOPIC_ID || null;
-    this.logs = new Map(); // In-memory storage for demo - use database in production
+    this.topicId = process.env.HEDERA_TOPIC_ID || null;
     this.initializeClient();
   }
 
@@ -41,51 +42,72 @@ class AuditService {
   /**
    * Submit audit log to HCS topic
    */
-  async submitAuditLog(marketId, logData) {
+  async submitAuditLog({ marketId, analysisId, logData, logType, timestamp }) {
     try {
       if (!this.topicId) {
         throw new Error('HCS Topic ID not configured');
       }
 
-      const logEntry = {
-        timestamp: new Date().toISOString(),
+      const logId = uuidv4();
+      
+      // Create audit log entry in database
+      const auditLog = new AuditLog({
+        logId,
         marketId,
-        type: logData.type || 'analysis',
+        analysisId,
+        logType,
+        data: logData,
+        message: logData.message || `${logType} event for market ${marketId}`,
+        hcsInfo: {
+          topicId: this.topicId
+        },
+        status: 'pending'
+      });
+
+      await auditLog.save();
+
+      // Prepare message for HCS
+      const logEntry = {
+        logId,
+        timestamp: timestamp || new Date().toISOString(),
+        marketId,
+        analysisId,
+        type: logType,
         data: logData,
         version: '1.0'
       };
 
       const message = JSON.stringify(logEntry);
       
-      const transaction = new TopicMessageSubmitTransaction()
-        .setTopicId(this.topicId)
-        .setMessage(message);
+      try {
+        const transaction = new TopicMessageSubmitTransaction()
+          .setTopicId(this.topicId)
+          .setMessage(message);
 
-      const response = await transaction.execute(this.client);
-      const receipt = await response.getReceipt(this.client);
-      
-      const logId = `${receipt.topicSequenceNumber}`;
-      
-      // Store log metadata locally
-      this.logs.set(logId, {
-        id: logId,
-        marketId,
-        topicId: this.topicId,
-        sequenceNumber: receipt.topicSequenceNumber,
-        transactionId: response.transactionId.toString(),
-        timestamp: logEntry.timestamp,
-        type: logEntry.type,
-        status: 'submitted',
-        messageSize: Buffer.byteLength(message, 'utf8')
-      });
+        const response = await transaction.execute(this.client);
+        const receipt = await response.getReceipt(this.client);
+        
+        // Update audit log with HCS information
+        await auditLog.markSubmitted({
+          sequenceNumber: receipt.topicSequenceNumber,
+          transactionId: response.transactionId.toString(),
+          consensusTimestamp: new Date(receipt.consensusTimestamp),
+          messageSize: Buffer.byteLength(message, 'utf8')
+        });
 
-      return {
-        logId,
-        sequenceNumber: receipt.topicSequenceNumber,
-        transactionId: response.transactionId.toString(),
-        topicId: this.topicId,
-        timestamp: logEntry.timestamp
-      };
+        return {
+          logId,
+          sequenceNumber: receipt.topicSequenceNumber,
+          transactionId: response.transactionId.toString(),
+          topicId: this.topicId,
+          timestamp: logEntry.timestamp
+        };
+        
+      } catch (hcsError) {
+        // Mark as failed in database
+        await auditLog.markFailed(hcsError);
+        throw hcsError;
+      }
 
     } catch (error) {
       console.error('Failed to submit audit log:', error);
@@ -100,15 +122,14 @@ class AuditService {
     try {
       const { limit = 50, offset = 0 } = options;
       
-      // Filter logs by marketId
-      const marketLogs = Array.from(this.logs.values())
-        .filter(log => log.marketId === marketId)
-        .sort((a, b) => b.sequenceNumber - a.sequenceNumber)
-        .slice(offset, offset + limit);
+      const logs = await AuditLog.findByMarket(marketId, options);
+      const total = await AuditLog.countDocuments({ marketId });
 
       return {
-        logs: marketLogs,
-        total: marketLogs.length,
+        logs,
+        total,
+        limit: options.limit || 50,
+        offset: options.offset || 0,
         topicId: this.topicId
       };
 
