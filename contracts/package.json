@@ -2,6 +2,17 @@
   "name": "contracts",
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy.ts --network hardhatMainnet",
+    "deploy:hedera": "hardhat run scripts/deploy-hedera-testnet.ts --network hederaTestnet",
+    "verify:hedera": "hardhat run scripts/verify-hedera.ts --network hederaTestnet",
+    "test:hedera": "hardhat run scripts/test-hedera-testnet.ts --network hederaTestnet",
+    "test:e2e": "hardhat run scripts/test-end-to-end.ts --network hederaTestnet",
+    "test:integration": "hardhat run scripts/test-integration.ts --network hardhatMainnet",
+    "clean": "hardhat clean"
+  },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.3",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
@@ -13,6 +24,7 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.4.0",
-    "@pythnetwork/pyth-sdk-solidity": "^4.2.0"
+    "@pythnetwork/pyth-sdk-solidity": "^4.2.0",
+    "dotenv": "^17.2.2"
   }
 }
