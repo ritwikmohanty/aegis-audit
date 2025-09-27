@@ -39,11 +39,13 @@ interface IHederaTokenService {
         uint32 decimals
     ) external returns (int, address);
 
-    function mintToken(address token, uint64 amount, bytes[] memory metadata) external returns (int, uint64, int64[]);
+    function mintToken(address token, uint64 amount, bytes[] memory metadata) external returns (int, uint64, int64[] memory);
     
     function burnToken(address token, uint64 amount, int64[] memory serialNumbers) external returns (int, uint64);
 
     function associateToken(address account, address token) external returns (int);
 
     function associateTokens(address account, address[] memory tokens) external returns (int);
+
+    function transferToken(address token, address sender, address receiver, int64 amount) external returns (int);
 }
