@@ -63,23 +63,38 @@ async function main() {
     console.log("✅ AuditTrail deployed to:", auditTrailAddress);
     deploymentInfo.contracts.AuditTrail = auditTrailAddress;
 
-    // 5. Test the deployment by creating a sample market
+    // 5. Test the deployment by creating sample markets
     console.log("\n🧪 Testing deployment with sample market creation...");
     const endTime = Math.floor(Date.now() / 1000) + 86400; // 24 hours from now
     const sampleOracle = deployer.address; // Using deployer as oracle for testing
     
-    const tx = await marketFactory.createMarket(
+    // Create traditional market
+    const tx1 = await marketFactory.createMarket(
       "Will HBAR reach $0.10 by end of 2024?",
       endTime,
       sampleOracle,
       "YES_HBAR",
       "NO_HBAR"
     );
-    await tx.wait();
+    await tx1.wait();
     
-    const marketAddress = await marketFactory.getMarketAddress(0);
-    console.log("✅ Sample market created at:", marketAddress);
-    deploymentInfo.contracts.SampleMarket = marketAddress;
+    // Create AI analysis market
+    const dummyContract = "0x1234567890123456789012345678901234567890";
+    const tx2 = await marketFactory.createMarketFromAnalysis(
+      dummyContract,
+      "sample_contract_hash_123",
+      7500, // 75% confidence
+      endTime,
+      sampleOracle
+    );
+    await tx2.wait();
+    
+    const marketAddress1 = await marketFactory.getMarketAddress(0);
+    const marketAddress2 = await marketFactory.getMarketAddress(1);
+    console.log("✅ Sample traditional market created at:", marketAddress1);
+    console.log("✅ Sample AI analysis market created at:", marketAddress2);
+    deploymentInfo.contracts.SampleMarket = marketAddress1;
+    deploymentInfo.contracts.SampleAIMarket = marketAddress2;
 
     // 6. Save deployment information
     const deploymentPath = path.join(__dirname, "..", "deployments", "hedera_testnet.json");

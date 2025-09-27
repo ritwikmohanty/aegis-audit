@@ -1,21 +1,45 @@
-# Template Hedera Agent Kit Next.js
+# Aegis Audit - Prediction Markets
 
-## Getting Started
+A decentralized prediction market platform built on Hedera with AI agent integration.
 
-Required env variables:
+## Features
+
+- **Prediction Markets**: Create and bet on future events
+- **Real-time Prices**: Live HBAR/USD pricing via Pyth Network
+- **AI Assistant**: Chat with an AI agent for Hedera operations
+- **Wallet Integration**: Full Hedera wallet support
+
+## Setup
+
+1. Install dependencies:
+```bash
+npm install
 ```
-OPENAI_API_KEY=""
-HEDERA_ACCOUNT_ID=""
-HEDERA_PRIVATE_KEY=""
-HEDERA_NETWORK=""
 
-NEXT_PUBLIC_WALLET_CONNECT_ID=""
+2. Configure environment:
+```bash
+cp .env.example .env
+# Add your OpenAI API key and WalletConnect project ID
 ```
 
+3. Run development server:
+```bash
+npm run dev
+```
 
-run the server:
+## Environment Variables
 
-1. `npm install`
-2. `npm run dev`
+```env
+OPENAI_API_KEY=your_openai_key
+NEXT_PUBLIC_WALLET_CONNECT_ID=your_walletconnect_project_id
+NEXT_PUBLIC_HEDERA_RPC_URL=https://testnet.hashio.io/api
+NEXT_PUBLIC_MARKET_FACTORY_ADDRESS=your_deployed_contract_address
+```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech Stack
+
+- Next.js 15 with TypeScript
+- Hedera Hashgraph
+- Pyth Network (Price Feeds)
+- LangChain (AI Agent)
+- Tailwind CSS
