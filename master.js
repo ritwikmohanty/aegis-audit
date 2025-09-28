@@ -111,7 +111,12 @@ async function main() {
 ]);
 
   const agent = await createToolCallingAgent({ llm, tools, prompt });
-  const agentExecutor = new AgentExecutor({ agent, tools });
+  const agentExecutor = new AgentExecutor({ 
+    agent, 
+    tools, 
+    maxIterations: 3,
+    verbose: true 
+  });
 
   const userInput = process.argv[2];
   if (!userInput) {

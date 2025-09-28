@@ -2,12 +2,14 @@ const fs = require('fs').promises;
 const path = require('path');
 const { spawn } = require('child_process');
 const { v4: uuidv4 } = require('uuid');
+const { Analysis } = require('../models');
 
 class AnalysisService {
   constructor() {
-    this.analyses = new Map(); // In-memory storage for demo - use database in production
     this.slitherPath = process.env.SLITHER_PATH || 'slither';
     this.mythrilPath = process.env.MYTHRIL_PATH || 'myth';
+    this.analysisTimeout = parseInt(process.env.ANALYSIS_TIMEOUT) || 300000; // 5 minutes
+    this.workDir = process.env.ANALYSIS_WORK_DIR || './temp/analysis';
   }
 
   /**
@@ -16,8 +18,8 @@ class AnalysisService {
   async initiateAnalysis(marketId, files) {
     const analysisId = uuidv4();
     
-    const analysis = {
-      id: analysisId,
+    const analysisData = {
+      analysisId,
       marketId,
       status: 'initiated',
       progress: 0,
@@ -25,65 +27,125 @@ class AnalysisService {
         originalName: f.originalname,
         filename: f.filename,
         path: f.path,
-        size: f.size
+        size: f.size,
+        mimetype: f.mimetype,
+        hash: `hash_${Date.now()}_${f.filename}` // TODO: Generate actual file hash
       })),
-      results: {
-        slither: null,
-        mythril: null,
-        aiSummary: null
+      config: {
+        tools: ['slither', 'mythril'],
+        timeout: this.analysisTimeout
       },
-      createdAt: new Date(),
-      updatedAt: new Date()
+      execution: {
+        environment: {
+          nodeVersion: process.version,
+          platform: process.platform,
+          architecture: process.arch
+        }
+      }
     };
 
-    this.analyses.set(analysisId, analysis);
+    const analysis = new Analysis(analysisData);
+    await analysis.save();
 
     // Start analysis in background
     this.runAnalysis(analysisId).catch(error => {
       console.error(`Analysis ${analysisId} failed:`, error);
-      this.updateAnalysisStatus(analysisId, 'failed', error.message);
+      analysis.markFailed(error);
     });
 
     return analysisId;
   }
 
   /**
+   * Get analysis status
+   */
+  async getAnalysisStatus(analysisId) {
+    try {
+      const analysis = await Analysis.findOne({ analysisId });
+      if (!analysis) {
+        return null;
+      }
+
+      return {
+        analysisId: analysis.analysisId,
+        marketId: analysis.marketId,
+        status: analysis.status,
+        progress: analysis.progress,
+        createdAt: analysis.createdAt,
+        updatedAt: analysis.updatedAt,
+        execution: analysis.execution
+      };
+    } catch (error) {
+      console.error('Error getting analysis status:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get analysis results
+   */
+  async getAnalysisResults(analysisId) {
+    try {
+      const analysis = await Analysis.findOne({ analysisId });
+      if (!analysis) {
+        return null;
+      }
+
+      return {
+        analysisId: analysis.analysisId,
+        marketId: analysis.marketId,
+        status: analysis.status,
+        toolResults: analysis.toolResults,
+        aiSummary: analysis.aiSummary,
+        totalVulnerabilities: analysis.totalVulnerabilities,
+        createdAt: analysis.createdAt,
+        completedAt: analysis.execution.completedAt
+      };
+    } catch (error) {
+      console.error('Error getting analysis results:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Run the actual analysis using Slither and Mythril
    */
   async runAnalysis(analysisId) {
-    const analysis = this.analyses.get(analysisId);
+    const analysis = await Analysis.findOne({ analysisId });
     if (!analysis) {
       throw new Error('Analysis not found');
     }
 
     try {
-      this.updateAnalysisStatus(analysisId, 'running', null, 10);
+      await analysis.updateProgress(10, 'running');
 
       // Extract and prepare files
       const workDir = await this.prepareWorkDirectory(analysis.files);
-      this.updateAnalysisStatus(analysisId, 'running', null, 20);
+      await analysis.updateProgress(20, 'preprocessing');
 
       // Run Slither analysis
       const slitherResults = await this.runSlitherAnalysis(workDir);
-      analysis.results.slither = slitherResults;
-      this.updateAnalysisStatus(analysisId, 'running', null, 50);
+      analysis.toolResults.push(slitherResults);
+      await analysis.updateProgress(50, 'running');
 
       // Run Mythril analysis
       const mythrilResults = await this.runMythrilAnalysis(workDir);
-      analysis.results.mythril = mythrilResults;
-      this.updateAnalysisStatus(analysisId, 'running', null, 80);
+      analysis.toolResults.push(mythrilResults);
+      await analysis.updateProgress(80, 'postprocessing');
 
       // Generate AI summary
       const aiSummary = await this.generateAISummary(slitherResults, mythrilResults);
-      analysis.results.aiSummary = aiSummary;
-      this.updateAnalysisStatus(analysisId, 'completed', null, 100);
+      analysis.aiSummary = aiSummary;
+      
+      // Mark as completed
+      await analysis.markCompleted();
 
       // Clean up work directory
       await this.cleanupWorkDirectory(workDir);
 
     } catch (error) {
       console.error(`Analysis ${analysisId} error:`, error);
-      this.updateAnalysisStatus(analysisId, 'failed', error.message);
+      await analysis.markFailed(error);
       throw error;
     }
   }

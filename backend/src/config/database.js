@@ -1,106 +1,117 @@
-const { Sequelize } = require('sequelize');
-require('dotenv').config();
+const mongoose = require('mongoose');
 
-// Database configuration
-const config = {
-  development: {
-    username: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'password',
-    database: process.env.DB_NAME || 'aegis_audit_dev',
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    dialect: 'postgres',
-    logging: process.env.NODE_ENV === 'development' ? console.log : false,
-    pool: {
-      max: 5,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
+class Database {
+  constructor() {
+    this.connection = null;
+    this.isConnected = false;
+  }
+
+  /**
+   * Connect to MongoDB database
+   */
+  async connect() {
+    if (this.isConnected) {
+      console.log('MongoDB already connected');
+      return this.connection;
     }
-  },
-  test: {
-    username: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'password',
-    database: process.env.DB_NAME_TEST || 'aegis_audit_test',
-    host: process.env.DB_HOST || 'localhost',
-    port: process.env.DB_PORT || 5432,
-    dialect: 'postgres',
-    logging: false,
-    pool: {
-      max: 5,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
+
+    try {
+      const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/aegis-audit';
+      
+      const options = {
+        maxPoolSize: 10,
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+        bufferCommands: false,
+        bufferMaxEntries: 0,
+      };
+
+      this.connection = await mongoose.connect(mongoUri, options);
+      this.isConnected = true;
+
+      console.log(`✅ MongoDB connected to: ${mongoUri}`);
+
+      // Handle connection events
+      mongoose.connection.on('error', (error) => {
+        console.error('MongoDB connection error:', error);
+        this.isConnected = false;
+      });
+
+      mongoose.connection.on('disconnected', () => {
+        console.log('MongoDB disconnected');
+        this.isConnected = false;
+      });
+
+      mongoose.connection.on('reconnected', () => {
+        console.log('MongoDB reconnected');
+        this.isConnected = true;
+      });
+
+      // Handle process termination
+      process.on('SIGINT', async () => {
+        await this.disconnect();
+        process.exit(0);
+      });
+
+      return this.connection;
+    } catch (error) {
+      console.error('MongoDB connection failed:', error);
+      this.isConnected = false;
+      throw error;
     }
-  },
-  production: {
-    username: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT || 5432,
-    dialect: 'postgres',
-    logging: false,
-    pool: {
-      max: 10,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
-    },
-    dialectOptions: {
-      ssl: process.env.DB_SSL === 'true' ? {
-        require: true,
-        rejectUnauthorized: false
-      } : false
+  }
+
+  /**
+   * Disconnect from MongoDB
+   */
+  async disconnect() {
+    if (this.connection) {
+      await mongoose.connection.close();
+      this.isConnected = false;
+      console.log('MongoDB disconnected');
     }
   }
-};
 
-const env = process.env.NODE_ENV || 'development';
-const dbConfig = config[env];
-
-// Create Sequelize instance
-const sequelize = new Sequelize(
-  dbConfig.database,
-  dbConfig.username,
-  dbConfig.password,
-  {
-    host: dbConfig.host,
-    port: dbConfig.port,
-    dialect: dbConfig.dialect,
-    logging: dbConfig.logging,
-    pool: dbConfig.pool,
-    dialectOptions: dbConfig.dialectOptions || {}
+  /**
+   * Get connection status
+   */
+  getConnectionStatus() {
+    return {
+      isConnected: this.isConnected,
+      readyState: mongoose.connection.readyState,
+      host: mongoose.connection.host,
+      port: mongoose.connection.port,
+      name: mongoose.connection.name
+    };
   }
-);
 
-// Test database connection
-const testConnection = async () => {
-  try {
-    await sequelize.authenticate();
-    console.log('✅ Database connection established successfully');
-    return true;
-  } catch (error) {
-    console.error('❌ Unable to connect to database:', error.message);
-    return false;
+  /**
+   * Health check
+   */
+  async healthCheck() {
+    try {
+      if (!this.isConnected) {
+        return { status: 'disconnected', error: 'Not connected to database' };
+      }
+
+      // Simple ping to check if database is responsive
+      await mongoose.connection.db.admin().ping();
+      
+      return {
+        status: 'healthy',
+        connection: this.getConnectionStatus(),
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        status: 'unhealthy',
+        error: error.message,
+        timestamp: new Date().toISOString()
+      };
+    }
   }
-};
+}
 
-// Initialize database (create tables)
-const initializeDatabase = async () => {
-  try {
-    await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
-    console.log('✅ Database tables synchronized successfully');
-    return true;
-  } catch (error) {
-    console.error('❌ Database synchronization failed:', error.message);
-    return false;
-  }
-};
-
-module.exports = {
-  sequelize,
-  testConnection,
-  initializeDatabase,
-  config
-};
+// Export single instance
+const database = new Database();
+module.exports = database;
