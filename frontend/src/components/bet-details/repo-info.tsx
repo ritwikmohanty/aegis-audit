@@ -1,5 +1,44 @@
+"use client"
+
 import { Badge } from "@/components/ui/badge"
-export default async function RepoInfo({ repoFullName }: { repoFullName: string }) {
+import { useState, useEffect } from "react"
+
+export default function RepoInfo({ repoFullName }: { repoFullName: string }) {
+  const [data, setData] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(false)
+
+  useEffect(() => {
+    if (!repoFullName || repoFullName.split("/").length !== 2) {
+      return
+    }
+
+    const fetchRepoData = async () => {
+      setLoading(true)
+      setError(false)
+      
+      try {
+        const res = await fetch(`https://api.github.com/repos/${repoFullName}`, {
+          cache: "no-store",
+          headers: { Accept: "application/vnd.github+json" },
+        })
+        
+        if (res.ok) {
+          const repoData = await res.json()
+          setData(repoData)
+        } else {
+          setError(true)
+        }
+      } catch (_) {
+        setError(true)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRepoData()
+  }, [repoFullName])
+
   if (!repoFullName || repoFullName.split("/").length !== 2) {
     return (
       <div className="text-sm text-muted-foreground">
@@ -8,19 +47,15 @@ export default async function RepoInfo({ repoFullName }: { repoFullName: string 
     )
   }
 
-  // Attempt a public GitHub fetch; show graceful fallback if blocked.
-  let data: any = null
-  try {
-    const res = await fetch(`https://api.github.com/repos/${repoFullName}`, {
-      cache: "no-store",
-      headers: { Accept: "application/vnd.github+json" },
-    })
-    if (res.ok) data = await res.json()
-  } catch (_) {
-    // ignore
+  if (loading) {
+    return (
+      <div className="text-sm text-muted-foreground">
+        Loading repository information...
+      </div>
+    )
   }
 
-  if (!data) {
+  if (error || !data) {
     return (
       <div className="text-sm text-muted-foreground">
         Couldn&apos;t load GitHub details right now. You can still proceed with betting.

@@ -63,7 +63,7 @@ export function BetCard({
           className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-md"
           aria-label={`Bet now on ${bet.vulnerability}`}
           onClick={() => {
-            const url = `/bets/${bet.id}?repo=${encodeURIComponent(
+            const url = `/market/${bet.id}?repo=${encodeURIComponent(
               bet.repository,
             )}&deadline=${encodeURIComponent(bet.endsAt)}`
             router.push(url)
