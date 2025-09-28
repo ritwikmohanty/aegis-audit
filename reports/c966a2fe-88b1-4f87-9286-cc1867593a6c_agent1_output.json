@@ -1,0 +1,38 @@
+[
+  {
+    "elements": [
+      {
+        "type": "pragma",
+        "name": "^0.8.0",
+        "source_mapping": {
+          "start": 32,
+          "length": 23,
+          "filename_relative": "../../../../../../tmp/aegis_runs/contract_c966a2fe-88b1-4f87-9286-cc1867593a6c.sol",
+          "filename_absolute": "/tmp/aegis_runs/contract_c966a2fe-88b1-4f87-9286-cc1867593a6c.sol",
+          "filename_short": "../../../../../../tmp/aegis_runs/contract_c966a2fe-88b1-4f87-9286-cc1867593a6c.sol",
+          "is_dependency": false,
+          "lines": [
+            2
+          ],
+          "starting_column": 1,
+          "ending_column": 24
+        },
+        "type_specific_fields": {
+          "directive": [
+            "solidity",
+            "^",
+            "0.8",
+            ".0"
+          ]
+        }
+      }
+    ],
+    "description": "Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)\n\t- FullInlinerNonExpressionSplitArgumentEvaluationOrder\n\t- MissingSideEffectsOnSelectorAccess\n\t- AbiReencodingHeadOverflowWithStaticArrayCleanup\n\t- DirtyBytesArrayToStorage\n\t- DataLocationChangeInInternalOverride\n\t- NestedCalldataArrayAbiReencodingSizeValidation\n\t- SignedImmutables\n\t- ABIDecodeTwoDimensionalArrayMemory\n\t- KeccakCaching.\nIt is used by:\n\t- ^0.8.0 (../../../../../../tmp/aegis_runs/contract_c966a2fe-88b1-4f87-9286-cc1867593a6c.sol#2)\n",
+    "markdown": "Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)\n\t- FullInlinerNonExpressionSplitArgumentEvaluationOrder\n\t- MissingSideEffectsOnSelectorAccess\n\t- AbiReencodingHeadOverflowWithStaticArrayCleanup\n\t- DirtyBytesArrayToStorage\n\t- DataLocationChangeInInternalOverride\n\t- NestedCalldataArrayAbiReencodingSizeValidation\n\t- SignedImmutables\n\t- ABIDecodeTwoDimensionalArrayMemory\n\t- KeccakCaching.\nIt is used by:\n\t- [^0.8.0](../../../../../../tmp/aegis_runs/contract_c966a2fe-88b1-4f87-9286-cc1867593a6c.sol#L2)\n",
+    "first_markdown_element": "../../../../../../tmp/aegis_runs/contract_c966a2fe-88b1-4f87-9286-cc1867593a6c.sol#L2",
+    "id": "2a0c57b74f4d6b8bfd472f4fe204b63c506ed4f23bfa7cff53cef667c5cf94dc",
+    "check": "solc-version",
+    "impact": "Informational",
+    "confidence": "High"
+  }
+]

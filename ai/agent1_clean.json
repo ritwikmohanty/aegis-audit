@@ -1,4 +1,3 @@
-[
   {
     "elements": [
       {
@@ -7,9 +6,9 @@
         "source_mapping": {
           "start": 688,
           "length": 104,
-          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
           "is_dependency": false,
           "lines": [
             24,
@@ -26,9 +25,9 @@
             "source_mapping": {
               "start": 57,
               "length": 1047,
-              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
               "is_dependency": false,
               "lines": [
                 4,
@@ -79,9 +78,9 @@
         "source_mapping": {
           "start": 734,
           "length": 51,
-          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
           "is_dependency": false,
           "lines": [
             25
@@ -96,9 +95,9 @@
             "source_mapping": {
               "start": 688,
               "length": 104,
-              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
               "is_dependency": false,
               "lines": [
                 24,
@@ -115,9 +114,9 @@
                 "source_mapping": {
                   "start": 57,
                   "length": 1047,
-                  "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-                  "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-                  "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+                  "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+                  "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+                  "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
                   "is_dependency": false,
                   "lines": [
                     4,
@@ -165,10 +164,10 @@
         }
       }
     ],
-    "description": "VulnerableContract.emergencyWithdraw() (../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#24-26) sends eth to arbitrary user\n\tDangerous calls:\n\t- address(msg.sender).transfer(address(this).balance) (../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#25)\n",
-    "markdown": "[VulnerableContract.emergencyWithdraw()](../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L24-L26) sends eth to arbitrary user\n\tDangerous calls:\n\t- [address(msg.sender).transfer(address(this).balance)](../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L25)\n",
-    "first_markdown_element": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L24-L26",
-    "id": "15e5cc521b8094dab77c63d9108210fbbebc34f2e8968df32d8a9f924eec0689",
+    "description": "VulnerableContract.emergencyWithdraw() (../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#24-26) sends eth to arbitrary user\n\tDangerous calls:\n\t- address(msg.sender).transfer(address(this).balance) (../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#25)\n",
+    "markdown": "[VulnerableContract.emergencyWithdraw()](../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L24-L26) sends eth to arbitrary user\n\tDangerous calls:\n\t- [address(msg.sender).transfer(address(this).balance)](../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L25)\n",
+    "first_markdown_element": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L24-L26",
+    "id": "2fc598dc4c98cabfaa0041dd656e8da1edaba626676783f92336f679c422a393",
     "check": "arbitrary-send-eth",
     "impact": "High",
     "confidence": "Medium"
@@ -181,9 +180,9 @@
         "source_mapping": {
           "start": 279,
           "length": 359,
-          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
           "is_dependency": false,
           "lines": [
             13,
@@ -206,9 +205,9 @@
             "source_mapping": {
               "start": 57,
               "length": 1047,
-              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
               "is_dependency": false,
               "lines": [
                 4,
@@ -259,9 +258,9 @@
         "source_mapping": {
           "start": 484,
           "length": 53,
-          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
           "is_dependency": false,
           "lines": [
             17
@@ -276,9 +275,9 @@
             "source_mapping": {
               "start": 279,
               "length": 359,
-              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
               "is_dependency": false,
               "lines": [
                 13,
@@ -301,9 +300,9 @@
                 "source_mapping": {
                   "start": 57,
                   "length": 1047,
-                  "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-                  "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-                  "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+                  "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+                  "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+                  "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
                   "is_dependency": false,
                   "lines": [
                     4,
@@ -359,9 +358,9 @@
         "source_mapping": {
           "start": 601,
           "length": 30,
-          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
           "is_dependency": false,
           "lines": [
             20
@@ -376,9 +375,9 @@
             "source_mapping": {
               "start": 279,
               "length": 359,
-              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
               "is_dependency": false,
               "lines": [
                 13,
@@ -401,9 +400,9 @@
                 "source_mapping": {
                   "start": 57,
                   "length": 1047,
-                  "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-                  "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-                  "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+                  "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+                  "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+                  "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
                   "is_dependency": false,
                   "lines": [
                     4,
@@ -455,10 +454,10 @@
         }
       }
     ],
-    "description": "Reentrancy in VulnerableContract.withdraw(uint256) (../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#13-21):\n\tExternal calls:\n\t- (success,None) = msg.sender.call{value: amount}() (../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#17)\n\tState variables written after the call(s):\n\t- balances[msg.sender] -= amount (../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#20)\n\tVulnerableContract.balances (../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#5) can be used in cross function reentrancies:\n\t- VulnerableContract.balances (../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#5)\n\t- VulnerableContract.deposit() (../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#28-30)\n\t- VulnerableContract.withdraw(uint256) (../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#13-21)\n",
-    "markdown": "Reentrancy in [VulnerableContract.withdraw(uint256)](../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L13-L21):\n\tExternal calls:\n\t- [(success,None) = msg.sender.call{value: amount}()](../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L17)\n\tState variables written after the call(s):\n\t- [balances[msg.sender] -= amount](../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L20)\n\t[VulnerableContract.balances](../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L5) can be used in cross function reentrancies:\n\t- [VulnerableContract.balances](../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L5)\n\t- [VulnerableContract.deposit()](../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L28-L30)\n\t- [VulnerableContract.withdraw(uint256)](../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L13-L21)\n",
-    "first_markdown_element": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L13-L21",
-    "id": "c108d0bbba471a66aa1f402f9925c86e279e99eaf7eac52c327906da94f2db62",
+    "description": "Reentrancy in VulnerableContract.withdraw(uint256) (../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#13-21):\n\tExternal calls:\n\t- (success,None) = msg.sender.call{value: amount}() (../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#17)\n\tState variables written after the call(s):\n\t- balances[msg.sender] -= amount (../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#20)\n\tVulnerableContract.balances (../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#5) can be used in cross function reentrancies:\n\t- VulnerableContract.balances (../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#5)\n\t- VulnerableContract.deposit() (../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#28-30)\n\t- VulnerableContract.withdraw(uint256) (../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#13-21)\n",
+    "markdown": "Reentrancy in [VulnerableContract.withdraw(uint256)](../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L13-L21):\n\tExternal calls:\n\t- [(success,None) = msg.sender.call{value: amount}()](../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L17)\n\tState variables written after the call(s):\n\t- [balances[msg.sender] -= amount](../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L20)\n\t[VulnerableContract.balances](../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L5) can be used in cross function reentrancies:\n\t- [VulnerableContract.balances](../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L5)\n\t- [VulnerableContract.deposit()](../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L28-L30)\n\t- [VulnerableContract.withdraw(uint256)](../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L13-L21)\n",
+    "first_markdown_element": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L13-L21",
+    "id": "bc50d5f93298c7e9c1a8a8c920c53dbd6451ccb573239b0a092ac22141625b50",
     "check": "reentrancy-eth",
     "impact": "High",
     "confidence": "Medium"
@@ -471,9 +470,9 @@
         "source_mapping": {
           "start": 32,
           "length": 23,
-          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
           "is_dependency": false,
           "lines": [
             2
@@ -491,10 +490,10 @@
         }
       }
     ],
-    "description": "Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)\n\t- FullInlinerNonExpressionSplitArgumentEvaluationOrder\n\t- MissingSideEffectsOnSelectorAccess\n\t- AbiReencodingHeadOverflowWithStaticArrayCleanup\n\t- DirtyBytesArrayToStorage\n\t- DataLocationChangeInInternalOverride\n\t- NestedCalldataArrayAbiReencodingSizeValidation\n\t- SignedImmutables\n\t- ABIDecodeTwoDimensionalArrayMemory\n\t- KeccakCaching.\nIt is used by:\n\t- ^0.8.0 (../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#2)\n",
-    "markdown": "Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)\n\t- FullInlinerNonExpressionSplitArgumentEvaluationOrder\n\t- MissingSideEffectsOnSelectorAccess\n\t- AbiReencodingHeadOverflowWithStaticArrayCleanup\n\t- DirtyBytesArrayToStorage\n\t- DataLocationChangeInInternalOverride\n\t- NestedCalldataArrayAbiReencodingSizeValidation\n\t- SignedImmutables\n\t- ABIDecodeTwoDimensionalArrayMemory\n\t- KeccakCaching.\nIt is used by:\n\t- [^0.8.0](../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L2)\n",
-    "first_markdown_element": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L2",
-    "id": "63ca6f237ef7f9219bc7f9db5d34664bfe879859d11730b38bf1dd38ac3a818c",
+    "description": "Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)\n\t- FullInlinerNonExpressionSplitArgumentEvaluationOrder\n\t- MissingSideEffectsOnSelectorAccess\n\t- AbiReencodingHeadOverflowWithStaticArrayCleanup\n\t- DirtyBytesArrayToStorage\n\t- DataLocationChangeInInternalOverride\n\t- NestedCalldataArrayAbiReencodingSizeValidation\n\t- SignedImmutables\n\t- ABIDecodeTwoDimensionalArrayMemory\n\t- KeccakCaching.\nIt is used by:\n\t- ^0.8.0 (../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#2)\n",
+    "markdown": "Version constraint ^0.8.0 contains known severe issues (https://solidity.readthedocs.io/en/latest/bugs.html)\n\t- FullInlinerNonExpressionSplitArgumentEvaluationOrder\n\t- MissingSideEffectsOnSelectorAccess\n\t- AbiReencodingHeadOverflowWithStaticArrayCleanup\n\t- DirtyBytesArrayToStorage\n\t- DataLocationChangeInInternalOverride\n\t- NestedCalldataArrayAbiReencodingSizeValidation\n\t- SignedImmutables\n\t- ABIDecodeTwoDimensionalArrayMemory\n\t- KeccakCaching.\nIt is used by:\n\t- [^0.8.0](../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L2)\n",
+    "first_markdown_element": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L2",
+    "id": "cc26b18377778faf16e4eef3f02533ae82ae7cc0ea6a09456158e9a44556e4a9",
     "check": "solc-version",
     "impact": "Informational",
     "confidence": "High"
@@ -507,9 +506,9 @@
         "source_mapping": {
           "start": 279,
           "length": 359,
-          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
           "is_dependency": false,
           "lines": [
             13,
@@ -532,9 +531,9 @@
             "source_mapping": {
               "start": 57,
               "length": 1047,
-              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
               "is_dependency": false,
               "lines": [
                 4,
@@ -585,9 +584,9 @@
         "source_mapping": {
           "start": 484,
           "length": 53,
-          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
           "is_dependency": false,
           "lines": [
             17
@@ -602,9 +601,9 @@
             "source_mapping": {
               "start": 279,
               "length": 359,
-              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
               "is_dependency": false,
               "lines": [
                 13,
@@ -627,9 +626,9 @@
                 "source_mapping": {
                   "start": 57,
                   "length": 1047,
-                  "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-                  "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-                  "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+                  "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+                  "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+                  "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
                   "is_dependency": false,
                   "lines": [
                     4,
@@ -677,10 +676,10 @@
         }
       }
     ],
-    "description": "Low level call in VulnerableContract.withdraw(uint256) (../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#13-21):\n\t- (success,None) = msg.sender.call{value: amount}() (../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#17)\n",
-    "markdown": "Low level call in [VulnerableContract.withdraw(uint256)](../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L13-L21):\n\t- [(success,None) = msg.sender.call{value: amount}()](../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L17)\n",
-    "first_markdown_element": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L13-L21",
-    "id": "f973783be17d48597d187916e98bfff162f739f2e012991414e9aafae8debc91",
+    "description": "Low level call in VulnerableContract.withdraw(uint256) (../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#13-21):\n\t- (success,None) = msg.sender.call{value: amount}() (../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#17)\n",
+    "markdown": "Low level call in [VulnerableContract.withdraw(uint256)](../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L13-L21):\n\t- [(success,None) = msg.sender.call{value: amount}()](../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L17)\n",
+    "first_markdown_element": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L13-L21",
+    "id": "27241a4671db75ec012eca70b6844bb5ee02677a045274230fc3840440d142e3",
     "check": "low-level-calls",
     "impact": "Informational",
     "confidence": "High"
@@ -693,9 +692,9 @@
         "source_mapping": {
           "start": 140,
           "length": 20,
-          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+          "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
           "is_dependency": false,
           "lines": [
             6
@@ -710,9 +709,9 @@
             "source_mapping": {
               "start": 57,
               "length": 1047,
-              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_absolute": "/tmp/aegis_runs/contract_local-run-005.sol",
-              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol",
+              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_absolute": "/tmp/aegis_runs/contract_local-run-008.sol",
+              "filename_short": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol",
               "is_dependency": false,
               "lines": [
                 4,
@@ -757,9 +756,9 @@
         }
       }
     ],
-    "description": "VulnerableContract.owner (../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#6) should be immutable \n",
-    "markdown": "[VulnerableContract.owner](../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L6) should be immutable \n",
-    "first_markdown_element": "../../../../../../../tmp/aegis_runs/contract_local-run-005.sol#L6",
+    "description": "VulnerableContract.owner (../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#6) should be immutable \n",
+    "markdown": "[VulnerableContract.owner](../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L6) should be immutable \n",
+    "first_markdown_element": "../../../../../../../tmp/aegis_runs/contract_local-run-008.sol#L6",
     "id": "6287f66ce48c6970d6918973e7b60e91aef9f4c8dfe23c13f23fc0294b618bf9",
     "check": "immutable-states",
     "impact": "Optimization",

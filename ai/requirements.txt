@@ -1,0 +1,6 @@
+hedera-sdk-py
+python-dotenv
+requests
+transformers
+torch
+mythril
