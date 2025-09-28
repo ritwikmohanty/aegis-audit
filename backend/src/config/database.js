@@ -16,6 +16,13 @@ class Database {
     }
 
     try {
+      // Skip MongoDB connection in development mode for testing
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Skipping MongoDB connection in development mode');
+        this.isConnected = true;
+        return null;
+      }
+      
       const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/aegis-audit';
       
       const options = {
@@ -23,7 +30,6 @@ class Database {
         serverSelectionTimeoutMS: 5000,
         socketTimeoutMS: 45000,
         bufferCommands: false,
-        bufferMaxEntries: 0,
       };
 
       this.connection = await mongoose.connect(mongoUri, options);

@@ -74,15 +74,22 @@ async function runFullAuditPipeline(contractPath) {
     console.log(`[MASTER_AGENT][${runId}] Agent 2 finished. Report saved to ${agent2ReportPath}`);
 
     // --- Step 3: Run Agent 3 (AI Remediation) ---
-    // TODO: Implement Agent 3 when ready
-    console.log(`\n[MASTER_AGENT][${runId}] Agent 3 not yet implemented. Skipping...`);
+    console.log(`\n[MASTER_AGENT][${runId}] Running Agent 3 (Remediation Agent)...`);
+    const agent3ReportPath = path.join(reportsDir, `${runId}_agent3_output.json`);
     
-    // For now, return the Agent 2 report as the final result
-    const agent2Report = JSON.parse(agent2Output);
-    await submitLogToHCS(remediationTopicId, JSON.stringify(agent2Report, null, 2));
-    console.log(`[MASTER_AGENT][${runId}] Analysis complete. Agent 2 report submitted to HCS.`);
+    const agent3Command = `python3 ai/agent3.py ${contractPath} ${agent2ReportPath} ${runId}`;
+    const { stdout: agent3Output, stderr: agent3Logs } = await execPromise(agent3Command);
+    await fs.writeFile(agent3ReportPath, agent3Output); // Save the clean JSON output
+    console.log(agent3Logs); // Display logs from the Python agent
+    await submitLogToHCS(remediationTopicId, `[RunID: ${runId}] Agent 3 Logs:\n${agent3Logs}`);
+    console.log(`[MASTER_AGENT][${runId}] Agent 3 finished. Report saved to ${agent3ReportPath}`);
     
-    return `Full audit complete for ${contractPath}. Agent 1 and Agent 2 analysis has been submitted to HCS Topic ${remediationTopicId}.`;
+    // Submit final remediation report to HCS
+    const agent3Report = JSON.parse(agent3Output);
+    await submitLogToHCS(remediationTopicId, JSON.stringify(agent3Report, null, 2));
+    console.log(`[MASTER_AGENT][${runId}] Analysis complete. Full audit with remediation submitted to HCS.`);
+    
+    return `Full audit complete for ${contractPath}. Agent 1, Agent 2, and Agent 3 analysis with ${agent3Report.total_remediations || 0} remediations has been submitted to HCS Topic ${remediationTopicId}.`;
 
   } catch (error) {
     console.error(`[MASTER_AGENT][${runId}] A critical error occurred during the audit:`, error);

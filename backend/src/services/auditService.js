@@ -22,8 +22,14 @@ class AuditService {
    */
   initializeClient() {
     try {
-      const accountId = AccountId.fromString(process.env.ACCOUNT_ID);
-      const privateKey = PrivateKey.fromString(process.env.PRIVATE_KEY);
+      // Skip Hedera initialization in development mode for testing
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Skipping Hedera client initialization in development mode');
+        return;
+      }
+      
+      const accountId = AccountId.fromString(process.env.HEDERA_ACCOUNT_ID);
+      const privateKey = PrivateKey.fromString(process.env.HEDERA_PRIVATE_KEY);
       
       if (process.env.HEDERA_NETWORK === 'testnet') {
         this.client = Client.forTestnet();
