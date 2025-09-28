@@ -2,10 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { WalletWidget } from "@/components/wallet"
-import { Menu } from "lucide-react"
+import { WalletButton } from '@/components/wallet-button'
 
 const links = [
   { href: "#transactions", label: "My Transactions" },
@@ -36,41 +33,9 @@ export function Navbar() {
           ))}
         </nav>
 
-        {/* Right: auth + wallet */}
-        <div className="hidden md:flex items-center gap-3">
-          <Button variant="outline" className="rounded-md bg-transparent">
-            Login / Signup
-          </Button>
-          <WalletWidget />
-        </div>
-
-        {/* Mobile: menu */}
-        <div className="md:hidden">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon" aria-label="Open menu">
-                <Menu className="size-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right">
-              <SheetHeader>
-                <SheetTitle className="text-left">Menu</SheetTitle>
-              </SheetHeader>
-              <div className="mt-4 flex flex-col gap-4">
-                {links.map((l) => (
-                  <Link key={l.href} href={l.href} className="text-base font-medium text-foreground">
-                    {l.label}
-                  </Link>
-                ))}
-                <Button variant="outline" className="w-full rounded-md mt-2 bg-transparent">
-                  Login / Signup
-                </Button>
-                <div className="mt-2">
-                  <WalletWidget compact />
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+        {/* Right: wallet button */}
+        <div className="flex items-center">
+          <WalletButton />
         </div>
       </div>
     </header>
