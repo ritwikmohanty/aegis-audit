@@ -1,0 +1,23 @@
+{
+  "name": "aegis-audit-ai-agents",
+  "version": "1.0.0",
+  "description": "AI agents for smart contract vulnerability detection and analysis",
+  "type": "module",
+  "main": "agent1.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "agent1": "node agent1.js"
+  },
+  "dependencies": {
+    "@hashgraph/sdk": "^2.49.0",
+    "dotenv": "^16.3.1"
+  },
+  "keywords": [
+    "hedera",
+    "smart-contracts",
+    "vulnerability-detection",
+    "ai-agents"
+  ],
+  "author": "",
+  "license": "MIT"
+}

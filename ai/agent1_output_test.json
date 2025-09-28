@@ -1,0 +1,92 @@
+[
+  {
+    "elements": [
+      {
+        "type": "function",
+        "name": "withdraw",
+        "source_mapping": {
+          "start": 423,
+          "length": 217,
+          "filename_relative": "../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol",
+          "filename_absolute": "/tmp/aegis_runs/contract_test-pipeline-001.sol",
+          "filename_short": "../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol",
+          "is_dependency": false,
+          "lines": [
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25
+          ],
+          "starting_column": 5,
+          "ending_column": 6
+        },
+        "type_specific_fields": {
+          "parent": {
+            "type": "contract",
+            "name": "VulnerableContract",
+            "source_mapping": {
+              "start": 57,
+              "length": 1047,
+              "filename_relative": "../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol",
+              "filename_absolute": "/tmp/aegis_runs/contract_test-pipeline-001.sol",
+              "filename_short": "../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol",
+              "is_dependency": false,
+              "lines": [
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                15,
+                16,
+                17,
+                18,
+                19,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+                36,
+                37
+              ],
+              "starting_column": 1,
+              "ending_column": 0
+            }
+          },
+          "signature": "withdraw()"
+        }
+      }
+    ],
+    "description": "Reentrancy in VulnerableContract.withdraw() (../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol#16-25):\n\tExternal calls:\n\t- (success) = msg.sender.call{value: amount}() (../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol#22)\n\tState variables written after the call(s):\n\t- balances[msg.sender] = 0 (../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol#24)\n\tVulnerableContract.balances (../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol#7) can be used in cross function reentrancies:\n\t- VulnerableContract.deposit() (../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol#11-14)\n\t- VulnerableContract.withdraw() (../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol#16-25)\n",
+    "markdown": "Reentrancy in [VulnerableContract.withdraw()](../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol#L16-L25):\n\tExternal calls:\n\t- [(success) = msg.sender.call{value: amount}()](../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol#L22)\n\tState variables written after the call(s):\n\t- [balances[msg.sender] = 0](../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol#L24)\n\t[VulnerableContract.balances](../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol#L7) can be used in cross function reentrancies:\n\t- [VulnerableContract.deposit()](../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol#L11-L14)\n\t- [VulnerableContract.withdraw()](../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol#L16-L25)\n",
+    "first_markdown_element": "../../../../../../../tmp/aegis_runs/contract_test-pipeline-001.sol#L16-L25",
+    "id": "5c8f6b2e4c45c1c8f9e8b7a6d5c4b3a2e1f0e9d8c7b6a5f4e3d2c1b0a9f8e7d6",
+    "check": "reentrancy-eth",
+    "impact": "High",
+    "confidence": "Medium"
+  }
+]

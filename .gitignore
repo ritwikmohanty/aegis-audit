@@ -1,0 +1,82 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+dist/
+build/
+.cache/
+.next/
+out/
+.env
+.env.local
+.env.*.local
+
+# Hardhat/Foundry
+artifacts/
+cache/
+typechain/
+coverage/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.venv/
+venv/
+env/
+pip-wheel-metadata/
+*.egg-info/
+*.egg
+*.log
+
+# OS/Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Database
+*.sqlite3
+*.db
+*.db-journal
+postgres-data/
+
+# Misc
+*.log
+*.pid
+*.seed
+*.bak
+*.tmp
+*.orig
+
+# Test output
+coverage/
+test-results/
+junit.xml
+
+# Ignore frontend build output
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+
+# Ignore backend build output
+backend/node_modules/
+backend/dist/
+backend/.env
+
+# Ignore contracts build output
+contracts/artifacts/
+contracts/cache/
+contracts/typechain/
+contracts/node_modules/
+
+# Ignore generated files
+frontend/.env*
+backend/.env*
+contracts/.env*

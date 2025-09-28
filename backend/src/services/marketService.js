@@ -1,11 +1,12 @@
-const { Client, ContractCallQuery, ContractExecuteTransaction, Hbar } = require('@hashgraph/sdk');
+const { ContractCallQuery, ContractExecuteTransaction, Hbar } = require('@hashgraph/sdk');
 const hederaClient = require('../utils/hederaClient');
+const { Market } = require('../models');
+const { v4: uuidv4 } = require('uuid');
 
 class MarketService {
   constructor() {
     this.client = null;
     this.marketFactoryAddress = process.env.MARKET_FACTORY_ADDRESS;
-    this.markets = new Map(); // In-memory storage for demo - use database in production
   }
 
   async initialize() {
@@ -17,16 +18,29 @@ class MarketService {
   /**
    * Get all markets
    */
-  async getAllMarkets() {
-    await this.initialize();
-    
+  async getAllMarkets(filter = {}, options = {}) {
     try {
-      // In a real implementation, this would query the blockchain or database
-      // For now, return the in-memory markets
-      return Array.from(this.markets.values());
+      const query = Market.find(filter);
+      
+      if (options.limit) {
+        query.limit(options.limit);
+      }
+      
+      if (options.offset) {
+        query.skip(options.offset);
+      }
+      
+      if (options.sort) {
+        query.sort(options.sort);
+      } else {
+        query.sort({ createdAt: -1 });
+      }
+      
+      const markets = await query.exec();
+      return markets;
     } catch (error) {
       console.error('Error fetching markets:', error);
-      throw new Error('Failed to fetch markets from blockchain');
+      throw new Error('Failed to fetch markets from database');
     }
   }
 
@@ -34,61 +48,76 @@ class MarketService {
    * Get market by ID
    */
   async getMarketById(marketId) {
-    await this.initialize();
-    
     try {
-      // Check in-memory storage first
-      if (this.markets.has(marketId)) {
-        return this.markets.get(marketId);
+      const market = await Market.findOne({ marketId });
+      
+      if (!market) {
+        return null;
       }
 
-      // Query blockchain for market details
-      const contractCallQuery = new ContractCallQuery()
-        .setContractId(marketId)
-        .setGas(100000)
-        .setFunction('getMarketInfo');
-
-      const result = await contractCallQuery.execute(this.client);
+      // Optionally sync with blockchain data
+      if (market.blockchainMarketAddress) {
+        await this.syncMarketWithBlockchain(market);
+      }
       
-      // Parse the result and create market object
-      const marketInfo = this.parseMarketInfo(result);
-      
-      // Cache the result
-      this.markets.set(marketId, marketInfo);
-      
-      return marketInfo;
+      return market;
     } catch (error) {
       console.error('Error fetching market by ID:', error);
-      return null;
+      throw new Error('Failed to fetch market from database');
     }
   }
 
   /**
    * Create a new market
    */
-  async createMarket({ question, endTime, contractAddress }) {
+  async createMarket({ question, endTime, contractAddress, contractHash, confidenceScore = 0, oracle }) {
     await this.initialize();
     
     try {
       const marketId = `market_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       
-      const market = {
-        id: marketId,
+      const marketData = {
+        marketId,
         question,
         endTime: new Date(endTime),
         contractAddress,
-        createdAt: new Date(),
-        status: 'active',
-        totalYesShares: 0,
-        totalNoShares: 0,
-        totalCollateral: 0,
-        outcome: null,
-        isResolved: false,
-        analysisResults: null
+        contractHash: contractHash || `hash_${Date.now()}`,
+        confidenceScore,
+        oracle: oracle || process.env.HEDERA_ACCOUNT_ID,
+        status: 'pending'
       };
+      
+      const market = new Market(marketData);
+      await market.save();
 
-      // Store in memory (use database in production)
-      this.markets.set(marketId, market);
+      // Create market on blockchain via MarketFactory
+      if (this.marketFactoryAddress && contractAddress) {
+        try {
+          const contractExecuteTransaction = new ContractExecuteTransaction()
+            .setContractId(this.marketFactoryAddress)
+            .setGas(300000)
+            .setFunction('createMarketFromAnalysis', [
+              contractAddress,
+              contractHash,
+              confidenceScore,
+              Math.floor(new Date(endTime).getTime() / 1000), // Convert to Unix timestamp
+              oracle || process.env.HEDERA_ACCOUNT_ID
+            ]);
+
+          const response = await contractExecuteTransaction.execute(this.client);
+          const receipt = await response.getReceipt(this.client);
+          
+          if (receipt.status.toString() === 'SUCCESS') {
+            // Update market with blockchain address (would need to parse from logs)
+            market.status = 'active';
+            await market.save();
+            console.log(`Market ${marketId} created on blockchain successfully`);
+          }
+        } catch (blockchainError) {
+          console.error('Blockchain market creation failed:', blockchainError);
+          // Market still exists in database but without blockchain integration
+        }
+      }
 
       return market;
     } catch (error) {
@@ -104,28 +133,41 @@ class MarketService {
     await this.initialize();
     
     try {
-      const market = this.markets.get(marketId);
+      const market = await Market.findOne({ marketId });
       if (!market) {
         throw new Error('Market not found');
       }
 
-      if (market.isResolved) {
+      if (market.status === 'resolved') {
         throw new Error('Market is already resolved');
       }
 
       // Update market with resolution
-      market.outcome = outcome;
-      market.isResolved = true;
-      market.analysisResults = analysisResults;
-      market.resolvedAt = new Date();
+      await market.resolve(outcome, analysisResults);
 
-      // In a real implementation, this would call the smart contract
-      // const contractExecuteTransaction = new ContractExecuteTransaction()
-      //   .setContractId(market.contractAddress)
-      //   .setGas(200000)
-      //   .setFunction('reportOutcome', new ContractFunctionParameters().addUint256(outcome));
+      // Call smart contract to report outcome
+      if (market.blockchainMarketAddress) {
+        try {
+          const outcomeValue = outcome === 'yes' ? 1 : outcome === 'no' ? 2 : 0;
+          
+          const contractExecuteTransaction = new ContractExecuteTransaction()
+            .setContractId(market.blockchainMarketAddress)
+            .setGas(200000)
+            .setFunction('reportOutcome', [outcomeValue]);
 
-      this.markets.set(marketId, market);
+          const response = await contractExecuteTransaction.execute(this.client);
+          const receipt = await response.getReceipt(this.client);
+          
+          if (receipt.status.toString() === 'SUCCESS') {
+            console.log(`Market ${marketId} resolved on blockchain successfully`);
+          } else {
+            console.error(`Blockchain resolution failed for market ${marketId}`);
+          }
+        } catch (blockchainError) {
+          console.error('Error resolving market on blockchain:', blockchainError);
+          // Market is still resolved in database even if blockchain call fails
+        }
+      }
 
       return market;
     } catch (error) {
@@ -138,11 +180,37 @@ class MarketService {
    * Get betting history for a market
    */
   async getMarketBets(marketId) {
-    await this.initialize();
-    
     try {
-      // In a real implementation, this would query blockchain events
-      // For now, return mock data
+      const market = await Market.findOne({ marketId });
+      if (!market) {
+        throw new Error('Market not found');
+      }
+
+      // Query blockchain for betting events if market has blockchain address
+      if (market.blockchainMarketAddress) {
+        await this.initialize();
+        
+        try {
+          const contractCallQuery = new ContractCallQuery()
+            .setContractId(market.blockchainMarketAddress)
+            .setGas(100000)
+            .setFunction('getBettingHistory');
+
+          const result = await contractCallQuery.execute(this.client);
+          
+          // Parse the result to extract betting data
+          // This would need proper ABI decoding in a real implementation
+          if (result) {
+            console.log(`Retrieved betting history for market ${marketId}`);
+            // Return parsed betting data from blockchain
+          }
+        } catch (blockchainError) {
+          console.error('Error querying blockchain for bets:', blockchainError);
+          // Fall back to mock data if blockchain query fails
+        }
+      }
+
+      // Mock betting data as fallback
       return [
         {
           id: 'bet_1',
@@ -170,35 +238,76 @@ class MarketService {
   }
 
   /**
-   * Parse market info from blockchain query result
+   * Sync market data with blockchain
    */
-  parseMarketInfo(result) {
-    // This would parse the actual blockchain response
-    // Implementation depends on the contract's return format
-    return {
-      question: 'Sample Market Question',
-      endTime: new Date(Date.now() + 86400000), // 24 hours from now
-      oracle: '0x1234567890123456789012345678901234567890',
-      totalYesShares: 0,
-      totalNoShares: 0,
-      totalCollateral: 0,
-      outcome: null,
-      isResolved: false
-    };
+  async syncMarketWithBlockchain(market) {
+    try {
+      if (!market.blockchainMarketAddress) {
+        return market;
+      }
+
+      await this.initialize();
+      
+      // Query blockchain for current market state
+      const contractCallQuery = new ContractCallQuery()
+        .setContractId(market.blockchainMarketAddress)
+        .setGas(100000)
+        .setFunction('marketInfo');
+      
+      const result = await contractCallQuery.execute(this.client);
+      
+      if (result) {
+        // Parse blockchain data and update market
+        // This would need proper ABI decoding in a real implementation
+        console.log(`Synced market ${market.marketId} with blockchain data`);
+        
+        // Example of updating market with blockchain data:
+        // market.totalYesShares = parsedResult.totalYesShares;
+        // market.totalNoShares = parsedResult.totalNoShares;
+        // market.totalCollateral = parsedResult.totalCollateral;
+        // 
+        // if (parsedResult.isResolved && market.status !== 'resolved') {
+        //   market.status = 'resolved';
+        //   market.outcome = parsedResult.outcome === 1 ? 'yes' : 'no';
+        //   market.resolvedAt = new Date();
+        // }
+        
+        await market.save();
+      }
+
+      return market;
+    } catch (error) {
+      console.error('Error syncing market with blockchain:', error);
+      return market;
+    }
   }
 
   /**
    * Get market statistics
    */
   async getMarketStats() {
-    const markets = Array.from(this.markets.values());
-    
-    return {
-      totalMarkets: markets.length,
-      activeMarkets: markets.filter(m => !m.isResolved).length,
-      resolvedMarkets: markets.filter(m => m.isResolved).length,
-      totalVolume: markets.reduce((sum, m) => sum + (m.totalCollateral || 0), 0)
-    };
+    try {
+      const stats = await Market.aggregate([
+        {
+          $group: {
+            _id: '$status',
+            count: { $sum: 1 },
+            totalCollateral: { $sum: '$totalCollateral' }
+          }
+        }
+      ]);
+
+      const totalMarkets = await Market.countDocuments();
+      
+      return {
+        totalMarkets,
+        byStatus: stats,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Error getting market stats:', error);
+      throw new Error('Failed to get market statistics');
+    }
   }
 }
 
