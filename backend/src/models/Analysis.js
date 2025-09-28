@@ -67,7 +67,7 @@ const AnalysisSchema = new Schema({
   },
   marketId: {
     type: String,
-    required: true,
+    required: false,  // Made optional for AI analysis
     ref: 'Market',
     index: true
   },
@@ -75,7 +75,7 @@ const AnalysisSchema = new Schema({
   // Analysis status and progress
   status: {
     type: String,
-    enum: ['initiated', 'uploading', 'preprocessing', 'running', 'postprocessing', 'completed', 'failed', 'cancelled'],
+    enum: ['initiated', 'uploading', 'preprocessing', 'running', 'analyzing', 'postprocessing', 'completed', 'failed', 'cancelled', 'error'],
     default: 'initiated',
     index: true
   },
@@ -84,6 +84,49 @@ const AnalysisSchema = new Schema({
     min: 0,
     max: 100,
     default: 0
+  },
+
+  // Submission data for AI analysis
+  submissionData: {
+    mode: {
+      type: String,
+      enum: ['repo', 'contract']
+    },
+    repoUrl: String,
+    selectedPath: String,
+    contractContent: String,
+    contractAddress: String,
+    selectedNetwork: {
+      id: String,
+      name: String,
+      explorer: String
+    },
+    timestamp: Date
+  },
+
+  // Individual step tracking for AI agents
+  steps: [{
+    id: String,
+    name: String,
+    status: {
+      type: String,
+      enum: ['pending', 'running', 'completed', 'error'],
+      default: 'pending'
+    },
+    description: String,
+    startedAt: Date,
+    completedAt: Date,
+    updatedAt: Date
+  }],
+
+  // AI Agent Results
+  agentResults: {
+    agent1: Schema.Types.Mixed, // Static Analysis results
+    agent2: Schema.Types.Mixed, // Symbolic & ML Analysis results  
+    agent3: Schema.Types.Mixed, // AI Remediation results
+    masterOutput: String,
+    masterErrors: String,
+    processingError: String
   },
   
   // File information

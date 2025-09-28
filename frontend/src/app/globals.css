@@ -48,6 +48,30 @@
   --shadow-xl: 3px 3px 0px 0px hsl(325.7800 58.1800% 56.8600% / 1.00), 3px 8px 10px -1px hsl(325.7800 58.1800% 56.8600% / 1.00);
   --shadow-2xl: 3px 3px 0px 0px hsl(325.7800 58.1800% 56.8600% / 2.50);
   --tracking-normal: 0em;
+  
+  /* Web3 specific variables */
+  --web3-success: oklch(0.7305 0.1604 161.9161);
+  --web3-success-foreground: oklch(0.9791 0 0);
+  --web3-warning: oklch(0.8190 0.0898 210.0943);
+  --web3-warning-foreground: oklch(0.2520 0 0);
+  --web3-error: oklch(0.7198 0.1802 9.7957);
+  --web3-error-foreground: oklch(0.9791 0 0);
+  --web3-info: oklch(0.6587 0.1673 153.6628);
+  --web3-info-foreground: oklch(0.9791 0 0);
+  
+  /* Market specific colors */
+  --market-yes: oklch(0.7305 0.1604 161.9161);
+  --market-yes-light: oklch(0.9500 0.0800 161.9161);
+  --market-no: oklch(0.7198 0.1802 9.7957);
+  --market-no-light: oklch(0.9500 0.0900 9.7957);
+  --market-neutral: oklch(0.7993 0.1293 160.2356);
+  --market-neutral-light: oklch(0.9500 0.0650 160.2356);
+  
+  /* Gradient backgrounds */
+  --gradient-primary: linear-gradient(135deg, var(--primary), var(--accent));
+  --gradient-success: linear-gradient(135deg, var(--web3-success), var(--market-yes));
+  --gradient-warning: linear-gradient(135deg, var(--web3-warning), var(--market-neutral));
+  --gradient-error: linear-gradient(135deg, var(--web3-error), var(--market-no));
 }
 
 .dark {
@@ -95,6 +119,30 @@
   --shadow-lg: 3px 3px 0px 0px hsl(206.1538 28.0576% 27.2549% / 1.00), 3px 4px 6px -1px hsl(206.1538 28.0576% 27.2549% / 1.00);
   --shadow-xl: 3px 3px 0px 0px hsl(206.1538 28.0576% 27.2549% / 1.00), 3px 8px 10px -1px hsl(206.1538 28.0576% 27.2549% / 1.00);
   --shadow-2xl: 3px 3px 0px 0px hsl(206.1538 28.0576% 27.2549% / 2.50);
+  
+  /* Web3 specific variables - dark mode */
+  --web3-success: oklch(0.7200 0.1100 200.3052);
+  --web3-success-foreground: oklch(0.2241 0.0396 215.0011);
+  --web3-warning: oklch(0.7806 0.1005 200.1695);
+  --web3-warning-foreground: oklch(0.2241 0.0396 215.0011);
+  --web3-error: oklch(0.6801 0.1905 10.0793);
+  --web3-error-foreground: oklch(0.2241 0.0396 215.0011);
+  --web3-info: oklch(0.6806 0.1206 159.6913);
+  --web3-info-foreground: oklch(0.9204 0.0144 180.6844);
+  
+  /* Market specific colors - dark mode */
+  --market-yes: oklch(0.7200 0.1100 200.3052);
+  --market-yes-light: oklch(0.3500 0.0550 200.3052);
+  --market-no: oklch(0.6801 0.1905 10.0793);
+  --market-no-light: oklch(0.3500 0.0950 10.0793);
+  --market-neutral: oklch(0.4267 0.0751 214.2015);
+  --market-neutral-light: oklch(0.3500 0.0375 214.2015);
+  
+  /* Gradient backgrounds - dark mode */
+  --gradient-primary: linear-gradient(135deg, var(--primary), var(--accent));
+  --gradient-success: linear-gradient(135deg, var(--web3-success), var(--market-yes));
+  --gradient-warning: linear-gradient(135deg, var(--web3-warning), var(--market-neutral));
+  --gradient-error: linear-gradient(135deg, var(--web3-error), var(--market-no));
 }
 
 @theme inline {
@@ -148,4 +196,75 @@
   --shadow-lg: var(--shadow-lg);
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
+}
+
+/* Web3 specific utility classes */
+.market-yes {
+  @apply bg-green-50 border-green-200 text-green-800;
+}
+
+.market-no {
+  @apply bg-red-50 border-red-200 text-red-800;
+}
+
+.market-neutral {
+  @apply bg-gray-50 border-gray-200 text-gray-800;
+}
+
+.dark .market-yes {
+  @apply bg-green-900/20 border-green-800 text-green-300;
+}
+
+.dark .market-no {
+  @apply bg-red-900/20 border-red-800 text-red-300;
+}
+
+.dark .market-neutral {
+  @apply bg-gray-900/20 border-gray-800 text-gray-300;
+}
+
+.gradient-primary {
+  background: var(--gradient-primary);
+}
+
+.gradient-success {
+  background: var(--gradient-success);
+}
+
+.gradient-warning {
+  background: var(--gradient-warning);
+}
+
+.gradient-error {
+  background: var(--gradient-error);
+}
+
+/* Animation utilities for web3 interactions */
+.pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .85;
+  }
+}
+
+.glow {
+  box-shadow: 0 0 20px rgba(var(--primary), 0.3);
+}
+
+.glow-success {
+  box-shadow: 0 0 20px rgba(var(--web3-success), 0.3);
+}
+
+.glow-warning {
+  box-shadow: 0 0 20px rgba(var(--web3-warning), 0.3);
+}
+
+.glow-error {
+  box-shadow: 0 0 20px rgba(var(--web3-error), 0.3);
 }

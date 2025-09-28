@@ -155,6 +155,103 @@ router.post('/:analysisId/rerun', async (req, res) => {
 });
 
 /**
+ * POST /api/analysis/ai-analyze
+ * Start AI-powered analysis using the master agent and all three AI agents
+ */
+router.post('/ai-analyze', async (req, res) => {
+  try {
+    const submissionData = req.body;
+    
+    // Validate submission
+    if (!submissionData.mode || (submissionData.mode !== 'repo' && submissionData.mode !== 'contract')) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid submission mode. Must be "repo" or "contract"'
+      });
+    }
+
+    if (submissionData.mode === 'repo' && !submissionData.repoUrl) {
+      return res.status(400).json({
+        success: false,
+        error: 'Repository URL is required for repo mode'
+      });
+    }
+
+    if (submissionData.mode === 'contract' && !submissionData.contractAddress) {
+      return res.status(400).json({
+        success: false,
+        error: 'Contract address is required for contract mode'
+      });
+    }
+
+    const analysisId = await analysisService.initiateAIAnalysis(submissionData);
+
+    res.json({
+      success: true,
+      data: {
+        analysisId,
+        message: 'AI analysis initiated successfully',
+        status: 'initiated'
+      }
+    });
+  } catch (error) {
+    console.error('Error starting AI analysis:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to start AI analysis',
+      message: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/analysis/:analysisId/stream
+ * Server-sent events stream for real-time analysis progress
+ */
+router.get('/:analysisId/stream', async (req, res) => {
+  const { analysisId } = req.params;
+  
+  // Set headers for server-sent events
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Cache-Control'
+  });
+
+  // Send initial connection message
+  res.write(`data: ${JSON.stringify({ type: 'connected', analysisId })}\n\n`);
+
+  // Poll for updates and send them to client
+  const pollInterval = setInterval(async () => {
+    try {
+      const status = await analysisService.getAnalysisStatus(analysisId);
+      if (status) {
+        res.write(`data: ${JSON.stringify({ type: 'progress', data: status })}\n\n`);
+        
+        // Stop streaming when analysis is complete or failed
+        if (status.status === 'completed' || status.status === 'error') {
+          clearInterval(pollInterval);
+          res.write(`data: ${JSON.stringify({ type: 'complete', data: status })}\n\n`);
+          res.end();
+        }
+      }
+    } catch (error) {
+      console.error('Error in SSE stream:', error);
+      res.write(`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`);
+      clearInterval(pollInterval);
+      res.end();
+    }
+  }, 2000);
+
+  // Clean up on client disconnect
+  req.on('close', () => {
+    clearInterval(pollInterval);
+  });
+});
+
+/**
  * GET /api/analysis/tools/status
  * Check status of analysis tools (Slither, Mythril, etc.)
  */
