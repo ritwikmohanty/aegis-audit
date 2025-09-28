@@ -6,8 +6,8 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 
 // Example user-only pairs (USDC to corresponding HBAR values)
 const userPairs = [
-  { usdc: 50, hbar: 340 },
-  { usdc: 100, hbar: 690 },
+  { usdc: 50, hbar: 340 }
+ 
 
 ]
 
@@ -28,7 +28,7 @@ export function UsdcHbarChart() {
       </CardHeader>
       <CardContent>
         <ChartContainer
-          className="h-[320px]"
+          className="h-[200px]"
           config={{
             usdc: { label: "USDC", color: "hsl(var(--chart-1))" },
             hbar: { label: "HBAR", color: "hsl(var(--chart-2))" },
@@ -48,7 +48,7 @@ export function UsdcHbarChart() {
         <div className="mt-4 text-sm text-muted-foreground">
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              Implied rate: <span className="font-medium text-foreground">{rate.toFixed(2)} HBAR</span> per 1 USDC
+              Implied rate: <span className="font-medium text-foreground">{rate.toFixed(1.2)} HBAR</span> per 1 USDC
             </li>
             <li>Pairs reflect your recent positions and pool entries</li>
             <li>
